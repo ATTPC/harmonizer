@@ -5,9 +5,11 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Config {
-    merger_path: PathBuf,
-    harmonic_path: PathBuf,
-    harmonic_size: u64,
+    pub merger_path: PathBuf,
+    pub harmonic_path: PathBuf,
+    pub harmonic_size: u64,
+    pub min_run: i32,
+    pub max_run: i32,
 }
 
 impl Config {
