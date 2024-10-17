@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 pub struct Config {
     pub merger_path: PathBuf,
     pub harmonic_path: PathBuf,
-    pub harmonic_size: u64,
+    harmonic_size_gb: u64,
     pub min_run: i32,
     pub max_run: i32,
 }
@@ -30,5 +30,9 @@ impl Config {
         let mut file = std::fs::File::create(path)?;
         file.write_all(yaml_str.as_bytes())?;
         Ok(())
+    }
+
+    pub fn get_harmonic_size(&self) -> u64 {
+        self.harmonic_size_gb * 1_000_000_000
     }
 }

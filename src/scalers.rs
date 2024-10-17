@@ -59,23 +59,21 @@ fn read_scalers_010(scalers: &mut Vec<Vec<u32>>, file: &File, run: i32) -> Resul
     let scaler_group = file.group("frib")?.group("scaler")?;
     let mut scaler: u32 = 0;
     loop {
-        if let Ok(event) = scaler_group
-            .dataset(&format!("scaler{scaler}_data"))?
-            .read_1d()
-        {
+        if let Ok(event) = scaler_group.dataset(&format!("scaler{scaler}_data")) {
+            let data = event.read_1d()?;
             scalers[0].push(run as u32);
             scalers[1].push(scaler);
-            scalers[2].push(event[0]);
-            scalers[3].push(event[1]);
-            scalers[4].push(event[2]);
-            scalers[5].push(event[3]);
-            scalers[6].push(event[4]);
-            scalers[7].push(event[5]);
-            scalers[8].push(event[6]);
-            scalers[9].push(event[7]);
-            scalers[10].push(event[8]);
-            scalers[11].push(event[9]);
-            scalers[12].push(event[10]);
+            scalers[2].push(data[0]);
+            scalers[3].push(data[1]);
+            scalers[4].push(data[2]);
+            scalers[5].push(data[3]);
+            scalers[6].push(data[4]);
+            scalers[7].push(data[5]);
+            scalers[8].push(data[6]);
+            scalers[9].push(data[7]);
+            scalers[10].push(data[8]);
+            scalers[11].push(data[9]);
+            scalers[12].push(data[10]);
         } else {
             break;
         }

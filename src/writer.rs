@@ -90,6 +90,8 @@ impl HarmonicWriter {
                 .create("977")?;
         }
 
+        self.current_event += 1;
+
         if self.current_path.metadata()?.len() >= self.harmonic_size {
             self.finish_file()?;
             self.current_event = 0;
@@ -98,6 +100,7 @@ impl HarmonicWriter {
             self.current_file = File::create(&self.current_path)?;
             self.init_file()?;
         }
+
         Ok(())
     }
 
@@ -124,6 +127,7 @@ impl HarmonicWriter {
 
     fn finish_file(&self) -> Result<()> {
         self.current_file
+            .group("events")?
             .attr("max_event")?
             .write_scalar(&self.current_event)?;
 

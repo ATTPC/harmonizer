@@ -16,11 +16,13 @@ use writer::HarmonicWriter;
 pub fn harmonize(config: Config) -> Result<()> {
     let total_events =
         get_total_merger_events(&config.merger_path, config.min_run, config.max_run)?;
-    let progress = ProgressBar::new(total_events).with_style(ProgressStyle::with_template(
-        "[{msg} - {ellapsed_precise}] {bar:40.cyan/blue} {percent}%",
-    )?);
+    let progress = ProgressBar::new(total_events)
+        .with_style(ProgressStyle::with_template(
+            "{msg}: {bar:40.cyan/blue} [{human_pos}/{human_len} - {percent}%] (ETA: {eta}, Duration: {elapsed})",
+        )?)
+        .with_message("Progress");
     let mut reader = MergerReader::new(&config.merger_path, config.min_run, config.max_run)?;
-    let mut writer = HarmonicWriter::new(&config.harmonic_path, config.harmonic_size)?;
+    let mut writer = HarmonicWriter::new(&config.harmonic_path, config.get_harmonic_size())?;
     loop {
         let event = reader.read_event()?;
         match event {
@@ -33,6 +35,7 @@ pub fn harmonize(config: Config) -> Result<()> {
     }
     writer.close()?;
     progress.finish();
+    println!("Extracting scalers...");
     process_scalers(
         &config.merger_path,
         &config.harmonic_path,
@@ -57,7 +60,7 @@ fn main() -> Result<()> {
         .get_matches();
 
     println!("--------------------- AT-TPC Harmonizer ---------------------");
-    let config_path = PathBuf::from(cli.get_one::<String>("path").expect("We require args"));
+    let config_path = PathBuf::from(cli.get_one::<String>("config").expect("We require args"));
 
     // Handle the new subcommand
     if let Some(("new", _)) = cli.subcommand() {
