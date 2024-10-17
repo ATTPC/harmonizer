@@ -1,8 +1,10 @@
+//! The definition of a configuration for the harmonizer
 use color_eyre::eyre::{eyre, Result};
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+/// Defines a configuration. It is Ser/De-able with serde.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Config {
     pub merger_path: PathBuf,
@@ -13,6 +15,7 @@ pub struct Config {
 }
 
 impl Config {
+    /// Load a configuration from a YAML file.
     pub fn load(path: &Path) -> Result<Self> {
         if !path.exists() {
             return Err(eyre!(
@@ -25,6 +28,7 @@ impl Config {
         Ok(serde_yaml::from_str::<Self>(&yaml_str)?)
     }
 
+    /// Save this configuration to a YAML file.
     pub fn save(&self, path: &Path) -> Result<()> {
         let yaml_str = serde_yaml::to_string(self)?;
         let mut file = std::fs::File::create(path)?;
@@ -32,6 +36,7 @@ impl Config {
         Ok(())
     }
 
+    /// Convert the harmonic size gb rep to bytes.
     pub fn get_harmonic_size(&self) -> u64 {
         self.harmonic_size_gb * 1_000_000_000
     }

@@ -1,3 +1,4 @@
+//! Representation of a Writer for harmonic data
 use super::reader::{construct_run_path, MergerEvent};
 use color_eyre::eyre::Result;
 use hdf5_metno::types::VarLenUnicode;
@@ -5,6 +6,11 @@ use hdf5_metno::File;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+/// Representation of a writer for harmonic data.
+/// It writes data with a slightly modified version of the
+/// 0.2.0 merger format (see README). Harmonic data is written
+/// to files, where each file has the same total amount of data
+/// (in bytes).
 #[derive(Debug)]
 pub struct HarmonicWriter {
     harmonic_path: PathBuf,
@@ -16,6 +22,7 @@ pub struct HarmonicWriter {
 }
 
 impl HarmonicWriter {
+    /// Create a new writer, the first file to be written is initialized.
     pub fn new(harmonic_path: &Path, harmonic_size: u64) -> Result<Self> {
         let current_run = 0;
         let current_path = construct_run_path(harmonic_path, current_run);
@@ -35,6 +42,7 @@ impl HarmonicWriter {
         Ok(writer)
     }
 
+    /// Write a MergerEvent.
     pub fn write(&mut self, event: MergerEvent) -> Result<()> {
         let event_group = self
             .current_file
@@ -104,10 +112,13 @@ impl HarmonicWriter {
         Ok(())
     }
 
+    /// Close the writer, ensuring that the required metadata
+    /// is written to the current file.
     pub fn close(&self) -> Result<()> {
         self.finish_file()
     }
 
+    /// Initialize the current file
     fn init_file(&self) -> Result<()> {
         let harmonizer_version =
             format!("{}:{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
@@ -125,6 +136,8 @@ impl HarmonicWriter {
         Ok(())
     }
 
+    /// Write the required metadata to the currently open file
+    /// when we are done with it.
     fn finish_file(&self) -> Result<()> {
         self.current_file
             .group("events")?

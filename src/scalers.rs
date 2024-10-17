@@ -1,3 +1,4 @@
+//! Functions for processing the scalers from a run set.
 use std::path::Path;
 
 use super::reader::construct_run_path;
@@ -5,6 +6,9 @@ use color_eyre::eyre::{eyre, Result};
 use hdf5_metno::File;
 use polars::prelude::*;
 
+/// The main loop of processing scalers. All scalers from all runs
+/// are combined into a single polars DataFrame and written to a parquet
+/// file.
 pub fn process_scalers(
     merger_path: &Path,
     harmonic_path: &Path,
@@ -13,6 +17,7 @@ pub fn process_scalers(
 ) -> Result<()> {
     let scaler_path = harmonic_path.join("scalers.parquet");
     let mut scalers: Vec<Vec<u32>> = vec![vec![]; 13];
+    // The scalers we have
     let scaler_columns = [
         "run",
         "event",
@@ -53,6 +58,7 @@ pub fn process_scalers(
     Ok(())
 }
 
+/// Read scalers from the 0.1.0 merger format
 fn read_scalers_010(scalers: &mut [Vec<u32>], file: &File, run: i32) -> Result<()> {
     let scaler_group = file.group("frib")?.group("scaler")?;
     let mut scaler: u32 = 0;
@@ -80,6 +86,7 @@ fn read_scalers_010(scalers: &mut [Vec<u32>], file: &File, run: i32) -> Result<(
     Ok(())
 }
 
+/// Read scalers from the modern merger format
 fn read_scalers_020(scalers: &mut [Vec<u32>], file: &File, run: i32) -> Result<()> {
     let scaler_group = file.group("scalers")?;
     let scaler_min = scaler_group.attr("min_event")?.read_scalar::<u32>()?;

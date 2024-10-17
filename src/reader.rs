@@ -1,8 +1,12 @@
+//! Implementation of an attpc_merger Reader.
+//! Also contains utility functions for getting cummulative statsistics about
+//! the set of runs to be harmonized.
 use color_eyre::eyre::{eyre, Result};
 use hdf5_metno::File;
 use ndarray::{Array1, Array2};
 use std::path::{Path, PathBuf};
 
+/// Enum for what version of the merger we are dealing with.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum MergerVersion {
     V010,
@@ -10,10 +14,12 @@ enum MergerVersion {
     Invalid,
 }
 
+/// Construct the formated run path from a parent path and run number.
 pub fn construct_run_path(path: &Path, run_number: i32) -> PathBuf {
     path.join(format!("run_{:0>4}.h5", run_number))
 }
 
+/// Traverse the set of runs and see how much data there is (in bytes).
 pub fn get_total_merger_bytes(merger_path: &Path, min_run: i32, max_run: i32) -> Result<u64> {
     let mut bytes = 0;
     for run in min_run..(max_run + 1) {
@@ -24,6 +30,7 @@ pub fn get_total_merger_bytes(merger_path: &Path, min_run: i32, max_run: i32) ->
     Ok(bytes)
 }
 
+/// Traverse the set of runs and see how many events there are.
 pub fn get_total_merger_events(merger_path: &Path, min_run: i32, max_run: i32) -> Result<u64> {
     let mut events = 0;
     for run in min_run..(max_run + 1) {
@@ -42,6 +49,7 @@ pub fn get_total_merger_events(merger_path: &Path, min_run: i32, max_run: i32) -
     Ok(events)
 }
 
+/// Unified definition of a GET event from the merger
 #[derive(Debug)]
 pub struct GetEvent {
     pub traces: Array2<i16>,
@@ -50,6 +58,7 @@ pub struct GetEvent {
     pub timestamp_other: u64,
 }
 
+/// Unified definition of an FRIBDAQ event from the merger
 #[derive(Debug)]
 pub struct FribEvent {
     pub traces: Array2<u16>,
@@ -58,6 +67,7 @@ pub struct FribEvent {
     pub timestamp: u32,
 }
 
+/// Unified definition of a complete event from the merger
 #[derive(Debug)]
 pub struct MergerEvent {
     pub get: Option<GetEvent>,
@@ -66,6 +76,9 @@ pub struct MergerEvent {
     pub event: u64,
 }
 
+/// Representation of a Reader for data from attpc_merger. It is
+/// capable of determining which version of the merger produced the
+/// data and then parsing it appropriately.
 #[derive(Debug)]
 pub struct MergerReader {
     merger_path: PathBuf,
@@ -78,6 +91,7 @@ pub struct MergerReader {
 }
 
 impl MergerReader {
+    /// Create a new reader. The first run is opened and initialized.
     pub fn new(merger_path: &Path, min_run: i32, max_run: i32) -> Result<Self> {
         let first_file = File::open(construct_run_path(merger_path, min_run))?;
         let mut reader = Self {
@@ -93,6 +107,10 @@ impl MergerReader {
         Ok(reader)
     }
 
+    /// Read the next event from the run set.
+    /// If the currently open run is finished, the next run that
+    /// exists within the range is opened. If there is no more data
+    /// to be read it returns a None.
     pub fn read_event(&mut self) -> Result<Option<MergerEvent>> {
         if self.current_event > self.current_max_event {
             let result = self.find_next_file()?;
@@ -115,6 +133,7 @@ impl MergerReader {
         result
     }
 
+    /// Initialize the current file, and update our state
     fn init_file(&mut self) -> Result<()> {
         let parent_groups = self.current_file.member_names()?;
         if parent_groups.contains(&String::from("meta")) {
@@ -136,6 +155,8 @@ impl MergerReader {
         Ok(())
     }
 
+    /// Find the next available file in the run range.
+    /// If there are no more runs, returns None.
     fn find_next_file(&mut self) -> Result<Option<()>> {
         let mut path;
         loop {
@@ -154,6 +175,7 @@ impl MergerReader {
         Ok(Some(()))
     }
 
+    /// Read an event from the modern merger format.
     fn read_event_020(&mut self) -> Result<Option<MergerEvent>> {
         let event_group = self
             .current_file
@@ -188,6 +210,7 @@ impl MergerReader {
         }))
     }
 
+    /// Read an event from the 0.1.0 merger format
     fn read_event_010(&mut self) -> Result<Option<MergerEvent>> {
         let mut maybe_get = None;
         let mut maybe_frib = None;
