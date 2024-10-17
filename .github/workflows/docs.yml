@@ -1,0 +1,47 @@
+name: docs
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+concurrency:
+    group: deploy
+    cancel-in-progress: false
+jobs:
+    build:
+        name: Build Docs
+        runs-on: macos-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Update Rust
+              run: rustup update stable
+            - name: Install HDF5
+              run: |
+                brew install hdf5
+            - name: Generate Docs
+              run: cargo doc --no-deps --lib
+            - name: Add Redirect
+              run: echo '<meta http-equiv="refresh" content="0;url=harmonizer/index.html">' > target/doc/index.html
+            - name: Remove lock file
+              run: rm target/doc/.lock
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                path:
+                    target/doc
+
+    deploy:
+        name: Deploy
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        runs-on: macos-latest
+        needs: build
+        steps:
+            - name: Deploy to GitHub pages
+              id: deployment
+              uses: actions/deploy-pages@v4
