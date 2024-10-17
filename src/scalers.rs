@@ -41,13 +41,11 @@ pub fn process_scalers(
         }
     }
 
-    let mut frame = DataFrame::from(
-        scalers
-            .iter()
-            .zip(scaler_columns)
-            .map(|(data, name)| Series::new(name.into(), data))
-            .collect(),
-    );
+    let mut frame = scalers
+        .iter()
+        .zip(scaler_columns)
+        .map(|(data, name)| Series::new(name.into(), data))
+        .collect();
 
     let mut parquet_file = std::fs::File::create(scaler_path)?;
     ParquetWriter::new(&mut parquet_file).finish(&mut frame)?;
@@ -55,7 +53,7 @@ pub fn process_scalers(
     Ok(())
 }
 
-fn read_scalers_010(scalers: &mut Vec<Vec<u32>>, file: &File, run: i32) -> Result<()> {
+fn read_scalers_010(scalers: &mut [Vec<u32>], file: &File, run: i32) -> Result<()> {
     let scaler_group = file.group("frib")?.group("scaler")?;
     let mut scaler: u32 = 0;
     loop {
@@ -82,7 +80,7 @@ fn read_scalers_010(scalers: &mut Vec<Vec<u32>>, file: &File, run: i32) -> Resul
     Ok(())
 }
 
-fn read_scalers_020(scalers: &mut Vec<Vec<u32>>, file: &File, run: i32) -> Result<()> {
+fn read_scalers_020(scalers: &mut [Vec<u32>], file: &File, run: i32) -> Result<()> {
     let scaler_group = file.group("scalers")?;
     let scaler_min = scaler_group.attr("min_event")?.read_scalar::<u32>()?;
     let scaler_max = scaler_group.attr("max_event")?.read_scalar::<u32>()?;

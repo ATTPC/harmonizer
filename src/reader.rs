@@ -17,9 +17,8 @@ pub fn construct_run_path(path: &Path, run_number: i32) -> PathBuf {
 pub fn get_total_merger_bytes(merger_path: &Path, min_run: i32, max_run: i32) -> Result<u64> {
     let mut bytes = 0;
     for run in min_run..(max_run + 1) {
-        match construct_run_path(merger_path, run).metadata() {
-            Ok(meta) => bytes += meta.len(),
-            Err(_) => (),
+        if let Ok(meta) = construct_run_path(merger_path, run).metadata() {
+            bytes += meta.len();
         }
     }
     Ok(bytes)
