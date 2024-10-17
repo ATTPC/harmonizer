@@ -1,5 +1,7 @@
 # harmonizer
 
+![CI](https://github.com/ATTPC/harmonizer/actions/workflows/ci.yml/badge.svg)
+
 > We impose order on the chaos of organic evolution. You exist because we allow it. And you will end because we demand it.
 >
 > -- Sovereign, Mass Effect
