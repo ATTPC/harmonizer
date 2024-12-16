@@ -12,5 +12,5 @@ indicatif = "0.17.9"
 ndarray = "0.16.1"
 polars = { version = "0.44.2", features = ["parquet"] }
 rustc-hash = "2.0.0"
-serde = { version = "1.0.215", features = ["derive"] }
+serde = { version = "1.0.216", features = ["derive"] }
 serde_yaml = "0.9.34"
